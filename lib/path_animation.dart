@@ -20,6 +20,7 @@ class _PathAnimationState extends State<PathAnimation>
   int _seconds = 6;
   Path _path;
   GlobalKey _canvasKey = GlobalKey();
+  GlobalKey _endKey = GlobalKey();
 
   @override
   void initState() {
@@ -43,19 +44,33 @@ class _PathAnimationState extends State<PathAnimation>
       ),
       body: Container(
         color: Colors.grey,
-        child: Column(
+        child: Stack(
           children: <Widget>[
-            CustomPaint(
-              painter: PathPainter(_path, _fraction),
-              child: Container(
+            Align(
+              alignment: Alignment.topLeft,
+              child: RaisedButton(
+                onPressed: (){
+                  _controller.reverse();
+                },
                 key: _canvasKey,
-                height: 500.0,
+                child: Text("start"),
               ),
             ),
-            RaisedButton(
-              onPressed: _startAnimation,
-              child: Text('Go'),
-            )
+            CustomPaint(
+              painter: PathPainter(_path, _fraction),
+//              child: Container(
+//                key: _canvasKey,
+//                height: 500.0,
+//              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 400,left: 300),
+              child: RaisedButton(
+                key: _endKey,
+                onPressed: _startAnimation,
+                child: Text('end'),
+              ),
+            ),
           ],
         ),
       ),
@@ -63,18 +78,25 @@ class _PathAnimationState extends State<PathAnimation>
   }
 
   Path _getPath(Size size) {
+    RenderBox renderBox = _canvasKey.currentContext.findRenderObject();
+    Offset offset = renderBox.localToGlobal(Offset.zero);
+    print("start offset :${offset.toString()}");
     Path path = Path();
-    path.moveTo(0, size.height / 2);
-    // path.quadraticBezierTo(
-    //     size.width / 2, size.height, size.width, size.height / 2);
-    path.cubicTo(size.width / 4, 3 * size.height / 4, 3 * size.width / 4, size.height / 4, size.width, size.height);
+    path.moveTo(offset.dx,offset.dy);
+     path.quadraticBezierTo(
+         size.width / 2, offset.dy, size.width, size.height);
+    //path.cubicTo(size.width / 4, 3 * size.height / 4, 3 * size.width / 4, size.height / 4, size.width, size.height);
 
     return path;
   }
 
   _startAnimation() {
-    RenderBox renderBox = _canvasKey.currentContext.findRenderObject();
-    Size s = renderBox.size;
+//    RenderBox renderBox = _canvasKey.currentContext.findRenderObject();
+//    Size s = renderBox.size;
+    RenderBox renderBox = _endKey.currentContext.findRenderObject();
+    Offset offset = renderBox.localToGlobal(Offset.zero);
+    Size s = new Size(offset.dx, offset.dy);
+    print("s size (start) : ${s.toString()}");
 
     _path = _getPath(s);
     PathMetrics pms = _path.computeMetrics();
