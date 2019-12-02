@@ -35,51 +35,76 @@ class _PathAnimationState extends State<PathAnimation>
     _controller.dispose();
     super.dispose();
   }
+  
+  Offset clickOffset;
+
+  GlobalKey paintKey = GlobalKey();
+
+  GlobalKey rootKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Path Animation'),
-      ),
-      body: Container(
-        color: Colors.grey,
-        child: Stack(
-          children: <Widget>[
-            Align(
-              alignment: Alignment.topLeft,
-              child: RaisedButton(
-                onPressed: (){
-                  _controller.reverse();
-                },
-                key: _canvasKey,
-                child: Text("start"),
-              ),
-            ),
-            CustomPaint(
-              painter: PathPainter(_path, _fraction),
+    return Container(
+      key: rootKey,
+      color: Colors.grey,
+      child: Stack(
+        children: <Widget>[
+          CustomPaint(
+            key: paintKey,
+            painter: PathPainter(_path, _fraction),
 //              child: Container(
 //                key: _canvasKey,
 //                height: 500.0,
 //              ),
+          ),
+          Align(
+            //key: _canvasKey,
+            alignment: Alignment.topLeft,
+            child: GestureDetector(
+              onPanDown: (details){
+                Offset clickO= new Offset(details.globalPosition.dx,
+                    details.globalPosition.dy);
+                print("click position    ${clickO.toString()}");
+              },
+              onTap:(){
+                RenderBox rb = _canvasKey.currentContext.findRenderObject();
+                Offset of = rb.localToGlobal(Offset.zero,ancestor: rootKey
+                    .currentContext.findRenderObject());
+                Size paintS = _canvasKey.currentContext.size;
+                //width = 82  height = 47
+                print("paint size : ${paintS.toString()}");
+                // dx = 0,  dy = 80
+                print("paint offset   ${of.toString()}");
+                clickOffset = new Offset(of.dx, of.dy);
+
+                _startAnimation();
+              },
+              child: Text(
+                "start",
+                key: _canvasKey,
+                style: TextStyle(fontSize: 40),),
             ),
-            Container(
-              margin: EdgeInsets.only(top: 400,left: 300),
-              child: RaisedButton(
-                key: _endKey,
-                onPressed: _startAnimation,
-                child: Text('end'),
-              ),
+          ),
+
+          Container(
+            margin: EdgeInsets.only(top: 400,left: 300),
+            child: RaisedButton(
+              key: _endKey,
+              onPressed:(){
+                _controller.reverse();
+              },
+              child: Text('end'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Path _getPath(Size size) {
-    RenderBox renderBox = _canvasKey.currentContext.findRenderObject();
-    Offset offset = renderBox.localToGlobal(Offset.zero);
+//    RenderBox renderBox = _canvasKey.currentContext.findRenderObject();
+//    Offset offset = renderBox.localToGlobal(Offset.zero);
+    Offset offset = clickOffset;
     print("start offset :${offset.toString()}");
     Path path = Path();
     path.moveTo(offset.dx,offset.dy);
